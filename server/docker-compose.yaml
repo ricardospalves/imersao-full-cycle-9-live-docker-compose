@@ -1,0 +1,40 @@
+# A versão do SDK do Docker COmpose que será utilizada.
+version: "3"
+
+# Containers que serão executados.
+services:
+  # Nome do Container, por ser qualquer nome.
+  app:
+    # Informa o caminho para o Dockerfile, que o Container será baseado.
+    build: .
+    # Esse commando garante que o service app só será executado quando o service
+    # database estiver pronto.
+    # Traduzindo o comando abaixo:
+    #
+    # wait-for database:3306: ouve o service database com a porta 3306;
+    # -t 40: espera por 40 segundos;
+    # -- ./start.sh: executa o arquivo ./start.sh.
+    command: wait-for database:3306 -t 40 -- ./start.sh
+    # Define a porta onde a aplicação irá rodar.
+    ports:
+      # Porta onde se quer acessar e a porta da aplicação.
+      - 8000:3000
+    # Espelha o projeto local com o Docker.
+    volumes:
+      # O promeiro parâmetro são os diretórios locais e o segundo para onde
+      # queremos mandar dentro do Docker.
+      - .:/home/node/app
+    # Informa que este container depende de outro.
+    depends_on:
+      # Nome do service que ele depende.
+      - database
+
+  database:
+    # Usa a imagem do banco de dados.
+    image: mysql:5.7
+    # Define as variáveis de ambiente.
+    environment:
+      - MYSQL_DATABASE=mydatabase
+      - MYSQL_ROOT_PASSWORD=root
+    volumes:
+      - ./dbdata:/var/lib/mysql
